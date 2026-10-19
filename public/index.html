@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0b0f14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>CartCap</title>
+<style>
+:root{
+  --bg:#0b0f14; --card:#141a22; --card2:#1b232d; --line:#263140; --text:#f2f5f9; --mute:#8b98a9;
+  --ok:#2ee59d; --warn:#ffb547; --bad:#ff5d6c; --accent:#6c8cff; --status:var(--ok);
+  --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;overscroll-behavior:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+input{font:inherit;color:var(--text)}
+#app{max-width:520px;margin:0 auto;min-height:100dvh;padding:calc(var(--safe-t) + 14px) 16px calc(130px + var(--safe-b))}
+
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.brand{font-weight:800;font-size:20px;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+.brand i{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#b06cff);display:grid;place-items:center;font-style:normal;font-size:14px}
+.chip{background:var(--card);border:1px solid var(--line);border-radius:99px;padding:8px 14px;font-size:14px;color:var(--mute)}
+.chip b{color:var(--text)}
+
+.hero{background:linear-gradient(160deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:26px;padding:22px 20px 20px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:auto -40px -60px auto;width:180px;height:180px;border-radius:50%;background:var(--status);opacity:.12;filter:blur(40px);transition:background .4s}
+.lbl{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--mute)}
+.total{font-size:52px;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.05;margin:4px 0 2px}
+.sub{color:var(--mute);font-size:15px}
+.bar{height:12px;border-radius:99px;background:#0d131a;margin:18px 0 12px;overflow:hidden}
+.bar>div{height:100%;width:0;border-radius:99px;background:var(--status);transition:width .5s cubic-bezier(.2,.9,.3,1),background .4s}
+.stats{display:flex;justify-content:space-between;font-size:14px}
+.stats .left{color:var(--status);font-weight:700;transition:color .4s}
+
+.sect{display:flex;justify-content:space-between;align-items:baseline;margin:26px 4px 10px}
+.sect h2{margin:0;font-size:17px}
+.sect button{color:var(--mute);font-size:14px}
+
+.item{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;margin-bottom:10px;animation:pop .3s ease}
+@keyframes pop{from{transform:scale(.96);opacity:0}}
+.thumb{width:52px;height:52px;border-radius:12px;background:var(--card2) center/contain no-repeat;flex:none;display:grid;place-items:center;font-size:22px}
+.meta{flex:1;min-width:0}
+.name{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.det{font-size:13px;color:var(--mute)}
+.tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:99px;background:#222d3b;color:#b6c3d6;margin-left:4px}
+.price{text-align:right}
+.price b{font-size:17px;font-variant-numeric:tabular-nums}
+.qty{display:flex;align-items:center;gap:2px;margin-top:4px;justify-content:flex-end}
+.qty button{width:28px;height:28px;border-radius:50%;background:var(--card2);font-size:17px;line-height:1}
+.qty span{min-width:22px;text-align:center;font-weight:600;font-size:14px}
+
+.empty{text-align:center;color:var(--mute);padding:40px 20px;border:1.5px dashed var(--line);border-radius:22px}
+.empty .big{font-size:42px;margin-bottom:6px}
+
+.dock{position:fixed;left:0;right:0;bottom:0;padding:14px 16px calc(14px + var(--safe-b));background:linear-gradient(to top,var(--bg) 60%,transparent);display:flex;gap:10px;max-width:520px;margin:0 auto}
+.btn{height:58px;border-radius:20px;font-weight:700;font-size:17px;display:flex;align-items:center;justify-content:center;gap:10px}
+.btn.main{flex:1;background:linear-gradient(135deg,var(--accent),#8a6cff);box-shadow:0 10px 30px -8px #6c8cffaa}
+.btn.alt{width:58px;background:var(--card);border:1px solid var(--line);font-size:22px}
+.btn:active{transform:scale(.97)}
+
+/* scanner */
+#scanner{position:fixed;inset:0;background:#000;z-index:20;display:none}
+#scanner.on{display:block}
+#scanner video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.shade{position:absolute;inset:0;background:radial-gradient(ellipse 80% 22% at 50% 42%,transparent 60%,#000b 100%)}
+.frame{position:absolute;left:8%;right:8%;top:30%;height:24%;border-radius:20px;box-shadow:0 0 0 100vmax #0007}
+.frame::before,.frame::after{content:"";position:absolute;inset:0;border-radius:20px;border:3px solid #fff8;}
+.frame i{position:absolute;left:6%;right:6%;height:2px;background:var(--bad);box-shadow:0 0 12px var(--bad);animation:sweep 1.8s ease-in-out infinite alternate}
+@keyframes sweep{from{top:12%}to{top:88%}}
+.stop{position:absolute;top:calc(var(--safe-t) + 14px);left:16px;right:16px;display:flex;justify-content:space-between;align-items:center}
+.pill{background:#000a;backdrop-filter:blur(10px);border-radius:99px;padding:10px 16px;font-weight:600;font-size:14px}
+.hint{position:absolute;left:0;right:0;top:58%;text-align:center;color:#fff;font-size:14px;text-shadow:0 1px 6px #000}
+.manual{position:absolute;left:16px;right:16px;bottom:calc(20px + var(--safe-b));display:flex;gap:8px}
+.manual input{flex:1;height:50px;border-radius:16px;border:0;background:#000b;backdrop-filter:blur(10px);padding:0 16px;outline:none}
+.manual button{height:50px;padding:0 20px;border-radius:16px;background:var(--accent);font-weight:700}
+#err{position:absolute;left:24px;right:24px;top:40%;text-align:center;color:#fff;display:none}
+
+/* sheets */
+.veil{position:fixed;inset:0;background:#0008;z-index:30;display:none}
+.veil.on{display:block}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:31;max-width:520px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-bottom:0;border-radius:28px 28px 0 0;padding:12px 20px calc(20px + var(--safe-b));transform:translateY(105%);transition:transform .32s cubic-bezier(.2,.9,.3,1)}
+.sheet.on{transform:none}
+.grab{width:42px;height:5px;border-radius:9px;background:var(--line);margin:0 auto 16px}
+.phead{display:flex;gap:14px;align-items:center}
+.phead .thumb{width:72px;height:72px;border-radius:16px;font-size:30px}
+.phead h3{margin:0;font-size:18px;line-height:1.25}
+.stores{display:flex;gap:8px;margin:16px 0 4px;flex-wrap:wrap}
+.store{padding:9px 14px;border-radius:14px;border:1.5px solid var(--line);background:var(--card2);font-size:14px;font-weight:600}
+.store.sel{border-color:var(--accent);background:#6c8cff22}
+.store small{display:block;font-weight:400;color:var(--mute)}
+.field{display:flex;align-items:center;gap:8px;background:var(--card2);border:1.5px solid var(--line);border-radius:18px;padding:0 16px;height:64px;margin:12px 0}
+.field span{font-size:26px;color:var(--mute)}
+.field input{flex:1;min-width:0;background:none;border:0;outline:none;font-size:30px;font-weight:700;font-variant-numeric:tabular-nums}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.stepper{display:flex;align-items:center;gap:6px;background:var(--card2);border-radius:99px;padding:4px}
+.stepper button{width:40px;height:40px;border-radius:50%;background:var(--card);font-size:22px}
+.stepper b{min-width:30px;text-align:center;font-size:18px}
+.note{font-size:13px;color:var(--mute);margin:6px 0 0}
+.warn{margin-top:12px;padding:10px 14px;border-radius:14px;background:#ff5d6c22;color:var(--bad);font-size:14px;font-weight:600;display:none}
+.warn.on{display:block}
+.go{width:100%;margin-top:14px;background:var(--ok);color:#04251a}
+.go.over{background:var(--bad);color:#fff}
+.skip{width:100%;margin-top:6px;height:44px;color:var(--mute)}
+
+#toast{position:fixed;left:50%;top:calc(var(--safe-t) + 16px);transform:translate(-50%,-150%);z-index:50;background:#fff;color:#000;padding:10px 18px;border-radius:99px;font-weight:600;font-size:14px;transition:transform .3s;max-width:90vw}
+#toast.on{transform:translate(-50%,0)}
+.spin{width:22px;height:22px;border:3px solid #fff4;border-top-color:#fff;border-radius:50%;animation:r .7s linear infinite;display:inline-block}
+@keyframes r{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand"><i>🛒</i>CartCap</div>
+    <button class="chip" id="budgetBtn">Budget <b id="budgetChip">$0</b> ✎</button>
+  </header>
+
+  <section class="hero" id="hero">
+    <div class="lbl">In your trolley</div>
+    <div class="total" id="total">$0.00</div>
+    <div class="sub" id="count">0 items</div>
+    <div class="bar"><div id="fill"></div></div>
+    <div class="stats"><span id="of" class="sub"></span><span class="left" id="left"></span></div>
+  </section>
+
+  <div class="sect"><h2>Items</h2><button id="clearBtn">Clear all</button></div>
+  <div id="list"></div>
+</div>
+
+<div class="dock">
+  <button class="btn main" id="scanBtn">📷 Scan item</button>
+  <button class="btn alt" id="keyBtn" aria-label="Enter barcode">⌨️</button>
+</div>
+
+<div id="scanner">
+  <video id="video" playsinline muted></video>
+  <div class="shade"></div>
+  <div class="frame"><i></i></div>
+  <div class="hint">Point at the barcode</div>
+  <div id="err"></div>
+  <div class="stop">
+    <button class="pill" id="closeScan">✕ Done</button>
+    <div class="pill" id="scanTotal">$0.00</div>
+  </div>
+  <form class="manual" id="manualForm">
+    <input id="manualInput" inputmode="numeric" pattern="[0-9]*" placeholder="Or type barcode number">
+    <button>Go</button>
+  </form>
+</div>
+
+<div class="veil" id="veil"></div>
+
+<div class="sheet" id="pSheet">
+  <div class="grab"></div>
+  <div class="phead">
+    <div class="thumb" id="pImg">🛍️</div>
+    <div><h3 id="pName"></h3><div class="det" id="pDet"></div></div>
+  </div>
+  <div class="stores" id="stores"></div>
+  <div class="field"><span>$</span><input id="pPrice" inputmode="decimal" placeholder="0.00"></div>
+  <div class="note" id="pNote"></div>
+  <div class="row" style="margin-top:14px">
+    <div class="lbl">Quantity</div>
+    <div class="stepper"><button id="qMinus">−</button><b id="qVal">1</b><button id="qPlus">+</button></div>
+  </div>
+  <div class="warn" id="pWarn"></div>
+  <button class="btn go" id="addBtn">Add to trolley</button>
+  <button class="skip" id="skipBtn">Cancel</button>
+</div>
+
+<div class="sheet" id="bSheet">
+  <div class="grab"></div>
+  <h3 style="margin:0 0 4px">Shopping budget</h3>
+  <div class="note">We'll warn you as you get close and when you go over.</div>
+  <div class="field"><span>$</span><input id="bInput" inputmode="decimal" placeholder="100"></div>
+  <button class="btn go" id="bSave" style="background:var(--accent);color:#fff">Save budget</button>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const money = c => (c < 0 ? '-' : '') + '$' + (Math.abs(c) / 100).toFixed(2);
+const toCents = v => Math.round(parseFloat(String(v).replace(/[^0-9.]/g, '')) * 100) || 0;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// ---------- state ----------
+let state = { budget: 0, items: [] };
+try { Object.assign(state, JSON.parse(localStorage.getItem('cartcap') || '{}')); } catch {}
+const save = () => { try { localStorage.setItem('cartcap', JSON.stringify(state)); } catch {} };
+const spent = () => state.items.reduce((s, i) => s + i.cents * i.qty, 0);
+
+// ---------- render ----------
+function render() {
+  const s = spent(), b = state.budget * 100;
+  const pct = b ? s / b : 0;
+  const color = !b ? 'var(--accent)' : pct > 1 ? 'var(--bad)' : pct >= .8 ? 'var(--warn)' : 'var(--ok)';
+  document.documentElement.style.setProperty('--status', color);
+  $('total').textContent = money(s);
+  $('scanTotal').textContent = money(s) + (b ? ' / ' + money(b) : '');
+  const n = state.items.reduce((a, i) => a + i.qty, 0);
+  $('count').textContent = n + (n === 1 ? ' item' : ' items');
+  $('budgetChip').textContent = b ? money(b).replace('.00', '') : 'Set';
+  $('fill').style.width = Math.min(100, pct * 100) + '%';
+  $('of').textContent = b ? 'of ' + money(b) + ' budget' : 'Tap Budget to set a limit';
+  $('left').textContent = !b ? '' : s > b ? money(s - b) + ' over budget' : money(b - s) + ' left';
+  $('clearBtn').style.display = state.items.length ? '' : 'none';
+  $('list').innerHTML = state.items.length ? state.items.map((it, i) => `
+    <div class="item">
+      <div class="thumb" style="${it.image ? `background-image:url('${esc(it.image)}')` : ''}">${it.image ? '' : '🛍️'}</div>
+      <div class="meta"><div class="name">${esc(it.name)}</div>
+        <div class="det">${esc([it.brand, it.size].filter(Boolean).join(' · '))}${it.store ? `<span class="tag">${esc(it.store)}</span>` : ''}</div>
+        <div class="det">${money(it.cents)} each</div></div>
+      <div class="price"><b>${money(it.cents * it.qty)}</b>
+        <div class="qty"><button data-d="-1" data-i="${i}">−</button><span>${it.qty}</span><button data-d="1" data-i="${i}">+</button></div></div>
+    </div>`).reverse().join('') : `<div class="empty"><div class="big">🧺</div>Your trolley is empty.<br>Scan a barcode to start adding up.</div>`;
+}
+$('list').onclick = e => {
+  const b = e.target.closest('button[data-i]'); if (!b) return;
+  const it = state.items[b.dataset.i]; it.qty += +b.dataset.d;
+  if (it.qty <= 0) state.items.splice(b.dataset.i, 1);
+  save(); render();
+};
+$('clearBtn').onclick = () => { if (confirm('Remove all items?')) { state.items = []; save(); render(); } };
+
+function toast(t) { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 2200); }
+
+// ---------- sheets ----------
+let openSheet = null;
+function show(sheet) { openSheet = sheet; $('veil').classList.add('on'); $(sheet).classList.add('on'); }
+function hide() { if (!openSheet) return; $(openSheet).classList.remove('on'); $('veil').classList.remove('on'); const was = openSheet; openSheet = null; if (was === 'pSheet') { cur = null; cooldown = Date.now() + 800; } }
+$('veil').onclick = hide;
+
+$('budgetBtn').onclick = () => { $('bInput').value = state.budget || ''; show('bSheet'); };
+$('bSave').onclick = () => { state.budget = parseFloat($('bInput').value) || 0; save(); render(); hide(); };
+
+// product sheet
+let cur = null;
+function openProduct(p) {
+  cur = { ...p, qty: 1, store: p.prices[0]?.store || '', };
+  $('pName').textContent = p.name || 'Unknown product';
+  $('pDet').textContent = [p.brand, p.size].filter(Boolean).join(' · ') || 'Barcode ' + p.barcode;
+  const img = $('pImg'); img.style.backgroundImage = p.image ? `url('${p.image}')` : ''; img.textContent = p.image ? '' : '🛍️';
+  $('stores').innerHTML = p.prices.map((x, i) => `<button class="store ${i ? '' : 'sel'}" data-i="${i}">${esc(x.store)}<small>${money(Math.round(x.price * 100))}${x.cup ? ' · ' + esc(x.cup) : ''}</small></button>`).join('');
+  $('pPrice').value = p.prices[0] ? p.prices[0].price.toFixed(2) : '';
+  $('pNote').textContent = p.prices.length ? 'Live shelf price. Tap to edit if the tag in the aisle differs.' : (p.found ? 'No live price found — type the price from the shelf tag.' : 'Product not in the database — add a name and the shelf price.');
+  if (!p.found) { cur.name = ''; $('pName').innerHTML = '<input id="nameIn" placeholder="Item name" style="background:none;border:0;outline:none;font-size:18px;font-weight:700;width:100%">'; $('nameIn').oninput = e => cur.name = e.target.value; }
+  $('qVal').textContent = 1; checkWarn(); show('pSheet');
+  if (!p.prices.length) setTimeout(() => $('pPrice').focus(), 350);
+}
+$('stores').onclick = e => {
+  const b = e.target.closest('.store'); if (!b) return;
+  document.querySelectorAll('.store').forEach(x => x.classList.toggle('sel', x === b));
+  const pr = cur.prices[b.dataset.i]; cur.store = pr.store; $('pPrice').value = pr.price.toFixed(2); checkWarn();
+};
+function checkWarn() {
+  const add = toCents($('pPrice').value) * cur.qty, after = spent() + add, b = state.budget * 100;
+  const over = b && after > b;
+  $('pWarn').classList.toggle('on', !!over);
+  if (over) $('pWarn').textContent = `⚠️ This puts you ${money(after - b)} over budget (${money(after)} total)`;
+  $('addBtn').classList.toggle('over', !!over);
+  $('addBtn').textContent = (over ? 'Add anyway · ' : 'Add to trolley · ') + money(add);
+}
+$('pPrice').oninput = () => cur && checkWarn();
+$('qPlus').onclick = () => { cur.qty++; $('qVal').textContent = cur.qty; checkWarn(); };
+$('qMinus').onclick = () => { cur.qty = Math.max(1, cur.qty - 1); $('qVal').textContent = cur.qty; checkWarn(); };
+$('skipBtn').onclick = hide;
+$('addBtn').onclick = () => {
+  const cents = toCents($('pPrice').value);
+  if (!cents) return toast('Enter a price first');
+  if (!cur.name) cur.name = 'Item ' + cur.barcode.slice(-4);
+  const ex = state.items.find(i => i.barcode === cur.barcode && i.cents === cents);
+  if (ex) ex.qty += cur.qty; else state.items.push({ barcode: cur.barcode, name: cur.name, brand: cur.brand, size: cur.size, image: cur.image, store: cur.store, cents, qty: cur.qty });
+  save(); render(); navigator.vibrate?.(40); toast('Added ✓'); hide();
+};
+
+// ---------- lookup ----------
+async function lookup(code) {
+  toast('Looking up ' + code + '…');
+  try {
+    const r = await fetch('/api/lookup/' + code);
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error);
+    openProduct(j);
+  } catch (e) {
+    openProduct({ barcode: code, found: false, name: '', brand: '', size: '', image: '', prices: [] });
+  }
+}
+
+// ---------- scanner ----------
+let stream = null, scanning = false, cooldown = 0, lastCode = '', lastAt = 0, zx = null;
+const video = $('video');
+function loadZX() {
+  if (zx) return zx;
+  if (!window.ZXing) return null;
+  const hints = new Map();
+  hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.EAN_8, ZXing.BarcodeFormat.UPC_A, ZXing.BarcodeFormat.UPC_E]);
+  hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+  zx = new ZXing.MultiFormatReader(); zx.setHints(hints); return zx;
+}
+async function startScan() {
+  $('scanner').classList.add('on'); $('err').style.display = 'none';
+  if (!navigator.mediaDevices?.getUserMedia) return showErr('Camera needs HTTPS. Open this app over a secure (https) link, or type the barcode below.');
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+    video.srcObject = stream; await video.play();
+  } catch (e) { return showErr('Camera unavailable (' + (e.name || 'error') + '). Allow camera access, or type the barcode below.'); }
+  scanning = true; loop();
+}
+function showErr(m) { $('err').textContent = m; $('err').style.display = 'block'; }
+function stopScan() {
+  scanning = false; stream?.getTracks().forEach(t => t.stop()); stream = null; video.srcObject = null;
+  $('scanner').classList.remove('on');
+}
+async function loop() {
+  const native = 'BarcodeDetector' in window ? new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'] }) : null;
+  const cv = document.createElement('canvas'), ctx = cv.getContext('2d', { willReadFrequently: true });
+  while (scanning) {
+    await new Promise(r => setTimeout(r, 120));
+    if (openSheet || Date.now() < cooldown || video.readyState < 2) continue;
+    let code = '';
+    try {
+      if (native) { const r = await native.detect(video); code = r[0]?.rawValue || ''; }
+      else if (loadZX()) {
+        // crop to the centre band where the frame sits
+        const w = video.videoWidth, h = video.videoHeight, cw = Math.floor(w * .84), ch = Math.floor(h * .5);
+        cv.width = cw; cv.height = ch; ctx.drawImage(video, (w - cw) / 2, h * .2, cw, ch, 0, 0, cw, ch);
+        const bmp = new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(new ZXing.HTMLCanvasElementLuminanceSource(cv)));
+        code = zx.decodeWithState(bmp).getText();
+      }
+    } catch {}
+    if (/^\d{8,14}$/.test(code) && !(code === lastCode && Date.now() - lastAt < 3000)) {
+      lastCode = code; lastAt = Date.now(); navigator.vibrate?.(60); lookup(code);
+    }
+  }
+}
+$('scanBtn').onclick = startScan;
+$('closeScan').onclick = stopScan;
+$('keyBtn').onclick = () => { const c = prompt('Enter barcode number'); if (/^\d{6,14}$/.test((c || '').trim())) lookup(c.trim()); };
+$('manualForm').onsubmit = e => { e.preventDefault(); const c = $('manualInput').value.trim(); if (/^\d{6,14}$/.test(c)) { $('manualInput').value = ''; lookup(c); } else toast('Enter 6–14 digits'); };
+
+render();
+</script>
+</body>
+</html>
